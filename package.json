@@ -1,0 +1,32 @@
+{
+  "name": "depcollector",
+  "version": "0.1.0",
+  "description": "Collect dependency version and age information from package.json and package-lock.json",
+  "type": "module",
+  "bin": {
+    "depcollector": "./bin/depcollector.mjs"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src",
+    "bin"
+  ],
+  "keywords": [
+    "dependencies",
+    "versions",
+    "audit",
+    "npm"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4",
+    "typescript": "^5"
+  }
+}
