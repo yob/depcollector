@@ -13,6 +13,7 @@ export interface DependencyInfo {
 }
 
 export interface CollectionResult {
+  ecosystem: "npm";
   collectedAt: string;
   gitSha: string;
   gitTimestamp: string;

@@ -125,6 +125,7 @@ async function main(): Promise<void> {
   const dependencies = await processInBatches(locked, directNames, CONCURRENCY, cutoff);
 
   const result: CollectionResult = {
+    ecosystem: "npm",
     collectedAt: new Date().toISOString(),
     gitSha: gitInfo.sha,
     gitTimestamp: gitInfo.timestamp,
