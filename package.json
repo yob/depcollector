@@ -6,15 +6,17 @@
   "bin": {
     "depcollector": "./bin/depcollector.mjs"
   },
+  "author": "James Healy (https://yob.id.au)",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
     "start": "tsx src/index.ts"
   },
   "engines": {
     "node": ">=20"
   },
   "files": [
-    "src",
+    "dist",
     "bin"
   ],
   "keywords": [
