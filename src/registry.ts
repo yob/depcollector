@@ -13,6 +13,7 @@ function findLatestBefore(
 
   for (const [version, dateStr] of Object.entries(time)) {
     if (version === "created" || version === "modified") continue;
+    if (version.includes("-")) continue;
     const date = new Date(dateStr);
     if (date <= cutoff && (!best || date > best.date)) {
       best = { version, date };
