@@ -1,5 +1,11 @@
+export interface LockedDependency {
+  name: string;
+  version: string;
+}
+
 export interface DependencyInfo {
   name: string;
+  direct: boolean;
   currentVersion: string;
   currentVersionDate: string;
   latestVersion: string;

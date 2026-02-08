@@ -38,6 +38,7 @@ function findLatestBefore(
 export async function getPackageInfo(
   name: string,
   currentVersion: string,
+  direct: boolean,
   cutoff?: Date
 ): Promise<DependencyInfo> {
   const url = `https://registry.npmjs.org/${encodeURIComponent(name)}`;
@@ -67,6 +68,7 @@ export async function getPackageInfo(
 
   return {
     name,
+    direct,
     currentVersion,
     currentVersionDate: data.time[currentVersion] ?? "unknown",
     latestVersion,
