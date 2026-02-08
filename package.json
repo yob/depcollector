@@ -10,6 +10,8 @@
   "author": "James Healy (https://yob.id.au)",
   "scripts": {
     "build": "tsc",
+    "formatting": "prettier --check .",
+    "formatting:fix": "prettier --write .",
     "prepublishOnly": "npm run build",
     "start": "tsx src/index.ts"
   },
@@ -29,6 +31,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22",
+    "prettier": "^3.8.1",
     "tsx": "^4",
     "typescript": "^5"
   },

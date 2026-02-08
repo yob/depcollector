@@ -1,25 +1,29 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { program } from "commander";
-import type { CollectionResult, DependencyInfo, LockedDependency } from "./types.js";
-import { getPackageInfo } from "./registry.js";
-import { getGitInfo } from "./git.js";
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { program } from 'commander'
+import type {
+  CollectionResult,
+  DependencyInfo,
+  LockedDependency,
+} from './types.js'
+import { getPackageInfo } from './registry.js'
+import { getGitInfo } from './git.js'
 
-const CONCURRENCY = 5;
+const CONCURRENCY = 5
 
 async function loadJson(filePath: string): Promise<unknown> {
-  const content = await readFile(filePath, "utf-8");
-  return JSON.parse(content);
+  const content = await readFile(filePath, 'utf-8')
+  return JSON.parse(content)
 }
 
 interface PackageJson {
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
 }
 
 interface PackageLockJson {
-  lockfileVersion?: number;
-  packages?: Record<string, { version?: string }>;
+  lockfileVersion?: number
+  packages?: Record<string, { version?: string }>
 }
 
 function getLockedVersions(
@@ -30,55 +34,55 @@ function getLockedVersions(
   if (!lockfile.lockfileVersion || lockfile.lockfileVersion < 2) {
     throw new Error(
       `package-lock.json lockfileVersion ${lockfile.lockfileVersion ?? 1} is not supported. ` +
-        "Please regenerate your lockfile with npm 7+ (lockfileVersion 2 or 3)."
-    );
+        'Please regenerate your lockfile with npm 7+ (lockfileVersion 2 or 3).'
+    )
   }
 
   if (!lockfile.packages) {
-    throw new Error("package-lock.json has no 'packages' field.");
+    throw new Error("package-lock.json has no 'packages' field.")
   }
 
   if (transitive) {
-    return getAllLockedVersions(lockfile.packages);
+    return getAllLockedVersions(lockfile.packages)
   }
 
   const allDeps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
-  };
+  }
 
-  const result: LockedDependency[] = [];
+  const result: LockedDependency[] = []
 
   for (const name of Object.keys(allDeps)) {
-    const entry = lockfile.packages[`node_modules/${name}`];
+    const entry = lockfile.packages[`node_modules/${name}`]
     if (entry?.version) {
-      result.push({ name, version: entry.version });
+      result.push({ name, version: entry.version })
     }
   }
 
-  return result;
+  return result
 }
 
 function getAllLockedVersions(
   packages: Record<string, { version?: string }>
 ): LockedDependency[] {
-  const seen = new Set<string>();
-  const result: LockedDependency[] = [];
+  const seen = new Set<string>()
+  const result: LockedDependency[] = []
 
   for (const [path, entry] of Object.entries(packages)) {
-    if (!path.startsWith("node_modules/") || !entry.version) continue;
+    if (!path.startsWith('node_modules/') || !entry.version) continue
     // Extract package name from the last node_modules/ segment
     // e.g. "node_modules/a/node_modules/@scope/b" -> "@scope/b"
-    const name = path.substring(path.lastIndexOf("node_modules/") + 13);
+    const name = path.substring(path.lastIndexOf('node_modules/') + 13)
     // Deduplicate by name+version to avoid redundant registry calls
-    const key = `${name}@${entry.version}`;
+    const key = `${name}@${entry.version}`
     if (!seen.has(key)) {
-      seen.add(key);
-      result.push({ name, version: entry.version });
+      seen.add(key)
+      result.push({ name, version: entry.version })
     }
   }
 
-  return result;
+  return result
 }
 
 async function processInBatches(
@@ -87,66 +91,92 @@ async function processInBatches(
   concurrency: number,
   cutoff?: Date
 ): Promise<DependencyInfo[]> {
-  const results: DependencyInfo[] = [];
+  const results: DependencyInfo[] = []
 
   for (let i = 0; i < locked.length; i += concurrency) {
-    const batch = locked.slice(i, i + concurrency);
+    const batch = locked.slice(i, i + concurrency)
     const batchResults = await Promise.all(
       batch.map((dep) =>
         getPackageInfo(dep.name, dep.version, directNames.has(dep.name), cutoff)
       )
-    );
-    results.push(...batchResults);
+    )
+    results.push(...batchResults)
   }
 
-  return results;
+  return results
 }
 
 program
-  .name("depcollector")
-  .description("Collect dependency version and age information from package.json and package-lock.json")
-  .option("--at-commit", "Cap latest version to what was available at the time of the commit")
-  .option("--transitive", "Include transitive dependencies")
-  .option("--project-name <name>", "Include a project name in the output")
-  .option("--manifest-path <path>", "Include the in-repo path to the manifest in the output")
-  .parse();
+  .name('depcollector')
+  .description(
+    'Collect dependency version and age information from package.json and package-lock.json'
+  )
+  .option(
+    '--at-commit',
+    'Cap latest version to what was available at the time of the commit'
+  )
+  .option('--transitive', 'Include transitive dependencies')
+  .option('--project-name <name>', 'Include a project name in the output')
+  .option(
+    '--manifest-path <path>',
+    'Include the in-repo path to the manifest in the output'
+  )
+  .parse()
 
 async function main(): Promise<void> {
-  const opts = program.opts<{ atCommit?: boolean; transitive?: boolean; projectName?: string; manifestPath?: string }>();
-  const cwd = process.cwd();
+  const opts = program.opts<{
+    atCommit?: boolean
+    transitive?: boolean
+    projectName?: string
+    manifestPath?: string
+  }>()
+  const cwd = process.cwd()
 
   const [packageJson, lockfile] = await Promise.all([
-    loadJson(join(cwd, "package.json")) as Promise<PackageJson>,
-    loadJson(join(cwd, "package-lock.json")) as Promise<PackageLockJson>,
-  ]);
+    loadJson(join(cwd, 'package.json')) as Promise<PackageJson>,
+    loadJson(join(cwd, 'package-lock.json')) as Promise<PackageLockJson>,
+  ])
 
-  const locked = getLockedVersions(packageJson, lockfile, opts.transitive ?? false);
-  locked.sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
+  const locked = getLockedVersions(
+    packageJson,
+    lockfile,
+    opts.transitive ?? false
+  )
+  locked.sort(
+    (a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version)
+  )
 
-  const directNames = new Set(Object.keys({
-    ...packageJson.dependencies,
-    ...packageJson.devDependencies,
-  }));
+  const directNames = new Set(
+    Object.keys({
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    })
+  )
 
-  const gitInfo = getGitInfo();
-  const cutoff = opts.atCommit ? new Date(gitInfo.timestamp) : undefined;
+  const gitInfo = getGitInfo()
+  const cutoff = opts.atCommit ? new Date(gitInfo.timestamp) : undefined
 
-  const dependencies = await processInBatches(locked, directNames, CONCURRENCY, cutoff);
+  const dependencies = await processInBatches(
+    locked,
+    directNames,
+    CONCURRENCY,
+    cutoff
+  )
 
   const result: CollectionResult = {
-    ecosystem: "npm",
+    ecosystem: 'npm',
     ...(opts.projectName && { projectName: opts.projectName }),
     ...(opts.manifestPath && { manifestPath: opts.manifestPath }),
     collectedAt: new Date().toISOString(),
     gitSha: gitInfo.sha,
     gitTimestamp: gitInfo.timestamp,
     dependencies,
-  };
+  }
 
-  console.log(JSON.stringify(result, null, 2));
+  console.log(JSON.stringify(result, null, 2))
 }
 
 main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+  console.error(err)
+  process.exit(1)
+})
