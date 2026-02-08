@@ -4,8 +4,7 @@
   "description": "Collect dependency version and age information from package.json and package-lock.json",
   "type": "module",
   "bin": {
-    "depcollector": "./bin/depcollector.mjs",
-    "depcollector-summarize": "./bin/depcollector-summarize.mjs"
+    "depcollector": "./bin/depcollector.mjs"
   },
   "author": "James Healy (https://yob.id.au)",
   "scripts": {
