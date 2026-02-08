@@ -35,12 +35,12 @@ function findLatestBefore(
   return { version: best, date: time[best] };
 }
 
-export async function getPackageInfo(
-  name: string,
-  currentVersion: string,
-  direct: boolean,
-  cutoff?: Date
-): Promise<DependencyInfo> {
+const registryCache = new Map<string, NpmRegistryResponse>();
+
+async function fetchRegistryData(name: string): Promise<NpmRegistryResponse> {
+  const cached = registryCache.get(name);
+  if (cached) return cached;
+
   const url = `https://registry.npmjs.org/${encodeURIComponent(name)}`;
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
@@ -53,6 +53,17 @@ export async function getPackageInfo(
   }
 
   const data = (await res.json()) as NpmRegistryResponse;
+  registryCache.set(name, data);
+  return data;
+}
+
+export async function getPackageInfo(
+  name: string,
+  currentVersion: string,
+  direct: boolean,
+  cutoff?: Date
+): Promise<DependencyInfo> {
+  const data = await fetchRegistryData(name);
 
   let latestVersion: string;
   let latestVersionDate: string;
