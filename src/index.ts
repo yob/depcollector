@@ -52,14 +52,15 @@ function getLockedVersions(
 
 async function processInBatches(
   entries: [string, string][],
-  concurrency: number
+  concurrency: number,
+  cutoff?: Date
 ): Promise<DependencyInfo[]> {
   const results: DependencyInfo[] = [];
 
   for (let i = 0; i < entries.length; i += concurrency) {
     const batch = entries.slice(i, i + concurrency);
     const batchResults = await Promise.all(
-      batch.map(([name, version]) => getPackageInfo(name, version))
+      batch.map(([name, version]) => getPackageInfo(name, version, cutoff))
     );
     results.push(...batchResults);
   }
@@ -68,6 +69,7 @@ async function processInBatches(
 }
 
 async function main(): Promise<void> {
+  const atCommit = process.argv.includes("--at-commit");
   const cwd = process.cwd();
 
   const [packageJson, lockfile] = await Promise.all([
@@ -80,9 +82,10 @@ async function main(): Promise<void> {
     a.localeCompare(b)
   );
 
-  const dependencies = await processInBatches(entries, CONCURRENCY);
-
   const gitInfo = getGitInfo();
+  const cutoff = atCommit ? new Date(gitInfo.timestamp) : undefined;
+
+  const dependencies = await processInBatches(entries, CONCURRENCY, cutoff);
 
   const result: CollectionResult = {
     collectedAt: new Date().toISOString(),

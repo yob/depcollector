@@ -5,9 +5,28 @@ interface NpmRegistryResponse {
   time: Record<string, string>;
 }
 
+function findLatestBefore(
+  time: Record<string, string>,
+  cutoff: Date
+): { version: string; date: string } | undefined {
+  let best: { version: string; date: Date } | undefined;
+
+  for (const [version, dateStr] of Object.entries(time)) {
+    if (version === "created" || version === "modified") continue;
+    const date = new Date(dateStr);
+    if (date <= cutoff && (!best || date > best.date)) {
+      best = { version, date };
+    }
+  }
+
+  if (!best) return undefined;
+  return { version: best.version, date: time[best.version] };
+}
+
 export async function getPackageInfo(
   name: string,
-  currentVersion: string
+  currentVersion: string,
+  cutoff?: Date
 ): Promise<DependencyInfo> {
   const url = `https://registry.npmjs.org/${encodeURIComponent(name)}`;
   const res = await fetch(url, {
@@ -21,13 +40,24 @@ export async function getPackageInfo(
   }
 
   const data = (await res.json()) as NpmRegistryResponse;
-  const latestVersion = data["dist-tags"].latest;
+
+  let latestVersion: string;
+  let latestVersionDate: string;
+
+  if (cutoff) {
+    const found = findLatestBefore(data.time, cutoff);
+    latestVersion = found?.version ?? data["dist-tags"].latest;
+    latestVersionDate = found?.date ?? data.time[latestVersion] ?? "unknown";
+  } else {
+    latestVersion = data["dist-tags"].latest;
+    latestVersionDate = data.time[latestVersion] ?? "unknown";
+  }
 
   return {
     name,
     currentVersion,
     currentVersionDate: data.time[currentVersion] ?? "unknown",
     latestVersion,
-    latestVersionDate: data.time[latestVersion] ?? "unknown",
+    latestVersionDate,
   };
 }
