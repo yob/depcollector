@@ -107,10 +107,12 @@ program
   .description("Collect dependency version and age information from package.json and package-lock.json")
   .option("--at-commit", "Cap latest version to what was available at the time of the commit")
   .option("--transitive", "Include transitive dependencies")
+  .option("--project-name <name>", "Include a project name in the output")
+  .option("--manifest-path <path>", "Include the in-repo path to the manifest in the output")
   .parse();
 
 async function main(): Promise<void> {
-  const opts = program.opts<{ atCommit?: boolean; transitive?: boolean }>();
+  const opts = program.opts<{ atCommit?: boolean; transitive?: boolean; projectName?: string; manifestPath?: string }>();
   const cwd = process.cwd();
 
   const [packageJson, lockfile] = await Promise.all([
@@ -133,6 +135,8 @@ async function main(): Promise<void> {
 
   const result: CollectionResult = {
     ecosystem: "npm",
+    ...(opts.projectName && { projectName: opts.projectName }),
+    ...(opts.manifestPath && { manifestPath: opts.manifestPath }),
     collectedAt: new Date().toISOString(),
     gitSha: gitInfo.sha,
     gitTimestamp: gitInfo.timestamp,
