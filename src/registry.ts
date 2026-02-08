@@ -66,7 +66,22 @@ export async function getPackageInfo(
   direct: boolean,
   cutoff?: Date
 ): Promise<DependencyInfo> {
-  const data = await fetchRegistryData(name)
+  let data: NpmRegistryResponse
+  try {
+    data = await fetchRegistryData(name)
+  } catch (err) {
+    console.error(
+      `Warning: ${err instanceof Error ? err.message : String(err)}`
+    )
+    return {
+      name,
+      direct,
+      currentVersion,
+      currentVersionDate: '',
+      latestVersion: '',
+      latestVersionDate: '',
+    }
+  }
 
   let latestVersion: string
   let latestVersionDate: string
