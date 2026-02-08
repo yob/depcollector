@@ -47,12 +47,14 @@ This prints a JSON report to stdout:
 
 ```json
 {
+  "ecosystem": "npm",
   "collectedAt": "2026-02-08T11:24:42.590Z",
   "gitSha": "c75e008...",
   "gitTimestamp": "2026-02-08T22:24:33+11:00",
   "dependencies": [
     {
       "name": "typescript",
+      "direct": true,
       "currentVersion": "5.9.3",
       "currentVersionDate": "2025-09-30T21:19:38.784Z",
       "latestVersion": "5.9.3",
@@ -78,6 +80,44 @@ running depcollector against older commits to understand how out of date
 dependencies were at that point in time, without the answer being skewed by
 versions released after the commit.
 
+### `--transitive`
+
+By default, only direct dependencies (those listed in `dependencies` and
+`devDependencies` in `package.json`) are included. Use `--transitive` to
+include all transitive dependencies from the lockfile as well:
+
+```bash
+depcollector --transitive
+```
+
+Each dependency in the output includes a `"direct"` field indicating whether
+it is a direct dependency (`true`) or a transitive one (`false`). If the same
+package appears at multiple versions in the dependency tree, each distinct
+version is reported separately.
+
+### `--project-name <name>`
+
+Include a project name in the output. Useful for distinguishing reports when
+collecting dependency data across multiple projects:
+
+```bash
+depcollector --project-name myapp
+```
+
+This adds a `"projectName"` key to the top level of the JSON output.
+
+### `--manifest-path <path>`
+
+Include the in-repo path to the manifest in the output. This is intended for
+monorepos where dependency data might be collected for multiple packages:
+
+```bash
+depcollector --manifest-path packages/api/package.json
+```
+
+This adds a `"manifestPath"` key to the top level of the JSON output. The
+value is not validated -- it can be any string.
+
 ### Saving output
 
 The output is plain JSON on stdout, so you can pipe it wherever you like:
@@ -97,11 +137,15 @@ depcollector | jq .
 
 | Field | Description |
 |---|---|
+| `ecosystem` | Always `"npm"` |
+| `projectName` | Project name (present when `--project-name` is used) |
+| `manifestPath` | In-repo manifest path (present when `--manifest-path` is used) |
 | `collectedAt` | ISO 8601 timestamp of when the report was generated |
 | `gitSha` | The current HEAD commit SHA |
 | `gitTimestamp` | The commit timestamp of HEAD |
 | `dependencies[]` | Array of dependency info objects |
 | `dependencies[].name` | Package name |
+| `dependencies[].direct` | `true` for direct dependencies, `false` for transitive |
 | `dependencies[].currentVersion` | Version locked in package-lock.json |
 | `dependencies[].currentVersionDate` | Release date of the locked version |
 | `dependencies[].latestVersion` | Latest available version (or latest as of commit with `--at-commit`) |
