@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { program } from "commander";
 import type { CollectionResult, DependencyInfo, LockedDependency } from "./types.js";
 import { getPackageInfo } from "./registry.js";
 import { getGitInfo } from "./git.js";
@@ -101,9 +102,15 @@ async function processInBatches(
   return results;
 }
 
+program
+  .name("depcollector")
+  .description("Collect dependency version and age information from package.json and package-lock.json")
+  .option("--at-commit", "Cap latest version to what was available at the time of the commit")
+  .option("--transitive", "Include transitive dependencies")
+  .parse();
+
 async function main(): Promise<void> {
-  const atCommit = process.argv.includes("--at-commit");
-  const transitive = process.argv.includes("--transitive");
+  const opts = program.opts<{ atCommit?: boolean; transitive?: boolean }>();
   const cwd = process.cwd();
 
   const [packageJson, lockfile] = await Promise.all([
@@ -111,7 +118,7 @@ async function main(): Promise<void> {
     loadJson(join(cwd, "package-lock.json")) as Promise<PackageLockJson>,
   ]);
 
-  const locked = getLockedVersions(packageJson, lockfile, transitive);
+  const locked = getLockedVersions(packageJson, lockfile, opts.transitive ?? false);
   locked.sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
 
   const directNames = new Set(Object.keys({
@@ -120,7 +127,7 @@ async function main(): Promise<void> {
   }));
 
   const gitInfo = getGitInfo();
-  const cutoff = atCommit ? new Date(gitInfo.timestamp) : undefined;
+  const cutoff = opts.atCommit ? new Date(gitInfo.timestamp) : undefined;
 
   const dependencies = await processInBatches(locked, directNames, CONCURRENCY, cutoff);
 
