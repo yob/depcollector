@@ -3,6 +3,7 @@ import type { DependencyInfo } from "./types.js";
 interface NpmRegistryResponse {
   "dist-tags": { latest: string };
   time: Record<string, string>;
+  versions: Record<string, { deprecated?: string }>;
 }
 
 function compareVersions(a: string, b: string): number {
@@ -18,6 +19,7 @@ function compareVersions(a: string, b: string): number {
 
 function findLatestBefore(
   time: Record<string, string>,
+  versions: Record<string, { deprecated?: string }>,
   cutoff: Date
 ): { version: string; date: string } | undefined {
   let best: string | undefined;
@@ -25,6 +27,7 @@ function findLatestBefore(
   for (const [version, dateStr] of Object.entries(time)) {
     if (version === "created" || version === "modified") continue;
     if (version.includes("-")) continue;
+    if (versions[version]?.deprecated) continue;
     const date = new Date(dateStr);
     if (date <= cutoff && (!best || compareVersions(version, best) > 0)) {
       best = version;
@@ -69,7 +72,7 @@ export async function getPackageInfo(
   let latestVersionDate: string;
 
   if (cutoff) {
-    const found = findLatestBefore(data.time, cutoff);
+    const found = findLatestBefore(data.time, data.versions, cutoff);
     latestVersion = found?.version ?? data["dist-tags"].latest;
     latestVersionDate = found?.date ?? data.time[latestVersion] ?? "unknown";
   } else {
