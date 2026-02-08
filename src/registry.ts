@@ -5,23 +5,34 @@ interface NpmRegistryResponse {
   time: Record<string, string>;
 }
 
+function compareVersions(a: string, b: string): number {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] ?? 0;
+    const nb = pb[i] ?? 0;
+    if (na !== nb) return na - nb;
+  }
+  return 0;
+}
+
 function findLatestBefore(
   time: Record<string, string>,
   cutoff: Date
 ): { version: string; date: string } | undefined {
-  let best: { version: string; date: Date } | undefined;
+  let best: string | undefined;
 
   for (const [version, dateStr] of Object.entries(time)) {
     if (version === "created" || version === "modified") continue;
     if (version.includes("-")) continue;
     const date = new Date(dateStr);
-    if (date <= cutoff && (!best || date > best.date)) {
-      best = { version, date };
+    if (date <= cutoff && (!best || compareVersions(version, best) > 0)) {
+      best = version;
     }
   }
 
   if (!best) return undefined;
-  return { version: best.version, date: time[best.version] };
+  return { version: best, date: time[best] };
 }
 
 export async function getPackageInfo(
