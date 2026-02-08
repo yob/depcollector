@@ -1,5 +1,5 @@
 {
-  "name": "depcollector",
+  "name": "@yob/depcollector",
   "version": "0.1.0",
   "description": "Collect dependency version and age information from package.json and package-lock.json",
   "type": "module",
