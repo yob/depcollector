@@ -15,7 +15,7 @@ export interface DependencyInfo {
 export interface CollectionResult {
   ecosystem: 'npm'
   projectName?: string
-  manifestPath?: string
+  manifestPath: string
   collectedAt: string
   gitSha: string
   gitTimestamp: string

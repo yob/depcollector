@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import { program } from 'commander'
 import type {
   CollectionResult,
@@ -117,10 +117,7 @@ program
   )
   .option('--transitive', 'Include transitive dependencies')
   .option('--project-name <name>', 'Include a project name in the output')
-  .option(
-    '--manifest-path <path>',
-    'Include the in-repo path to the manifest in the output'
-  )
+  .argument('[directory]', 'Path to directory containing package-lock.json', '.')
   .parse()
 
 async function main(): Promise<void> {
@@ -128,13 +125,13 @@ async function main(): Promise<void> {
     atCommit?: boolean
     transitive?: boolean
     projectName?: string
-    manifestPath?: string
   }>()
-  const cwd = process.cwd()
+  const directory = program.args[0] ?? '.'
+  const lockfilePath = join(directory, 'package-lock.json')
 
   const [packageJson, lockfile] = await Promise.all([
-    loadJson(join(cwd, 'package.json')) as Promise<PackageJson>,
-    loadJson(join(cwd, 'package-lock.json')) as Promise<PackageLockJson>,
+    loadJson(join(directory, 'package.json')) as Promise<PackageJson>,
+    loadJson(lockfilePath) as Promise<PackageLockJson>,
   ])
 
   const locked = getLockedVersions(
@@ -166,7 +163,7 @@ async function main(): Promise<void> {
   const result: CollectionResult = {
     ecosystem: 'npm',
     ...(opts.projectName && { projectName: opts.projectName }),
-    ...(opts.manifestPath && { manifestPath: opts.manifestPath }),
+    manifestPath: relative(process.cwd(), lockfilePath),
     collectedAt: new Date().toISOString(),
     gitSha: gitInfo.sha,
     gitTimestamp: gitInfo.timestamp,

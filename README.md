@@ -29,12 +29,6 @@ questions like:
 npm install -g depcollector
 ```
 
-Or run directly with npx:
-
-```bash
-npx depcollector
-```
-
 ## Usage
 
 Run in any directory containing a `package.json` and `package-lock.json`:
@@ -43,12 +37,19 @@ Run in any directory containing a `package.json` and `package-lock.json`:
 depcollector
 ```
 
+Alternatively, a path to the directory can be provided as a positional argument:
+
+```bash
+depcollector nested/project/
+```
+
 This prints a JSON report to stdout:
 
 ```json
 {
   "ecosystem": "npm",
   "collectedAt": "2026-02-08T11:24:42.590Z",
+  "manifestPath": "package-lock.json",
   "gitSha": "c75e008...",
   "gitTimestamp": "2026-02-08T22:24:33+11:00",
   "dependencies": [
@@ -106,18 +107,6 @@ depcollector --project-name myapp
 
 This adds a `"projectName"` key to the top level of the JSON output.
 
-### `--manifest-path <path>`
-
-Include the in-repo path to the manifest in the output. This is intended for
-monorepos where dependency data might be collected for multiple packages:
-
-```bash
-depcollector --manifest-path packages/api/package.json
-```
-
-This adds a `"manifestPath"` key to the top level of the JSON output. The
-value is not validated -- it can be any string.
-
 ### Saving output
 
 The output is plain JSON on stdout, so you can pipe it wherever you like:
@@ -139,7 +128,7 @@ depcollector | jq .
 |---|---|
 | `ecosystem` | Always `"npm"` |
 | `projectName` | Project name (present when `--project-name` is used) |
-| `manifestPath` | In-repo manifest path (present when `--manifest-path` is used) |
+| `manifestPath` | In-repo manifest path |
 | `collectedAt` | ISO 8601 timestamp of when the report was generated |
 | `gitSha` | The current HEAD commit SHA |
 | `gitTimestamp` | The commit timestamp of HEAD |
