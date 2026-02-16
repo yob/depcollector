@@ -57,9 +57,9 @@ This prints a JSON report to stdout:
       "name": "typescript",
       "direct": true,
       "currentVersion": "5.9.3",
-      "currentVersionDate": "2025-09-30T21:19:38.784Z",
+      "currentVersionReleasedAt": "2025-09-30T21:19:38.784Z",
       "latestVersion": "5.9.3",
-      "latestVersionDate": "2025-09-30T21:19:38.784Z"
+      "latestVersionReleasedAt": "2025-09-30T21:19:38.784Z"
     }
   ]
 }
@@ -136,9 +136,9 @@ depcollector | jq .
 | `dependencies[].name` | Package name |
 | `dependencies[].direct` | `true` for direct dependencies, `false` for transitive |
 | `dependencies[].currentVersion` | Version locked in package-lock.json |
-| `dependencies[].currentVersionDate` | Release date of the locked version |
+| `dependencies[].currentVersionReleasedAt` | Release date of the locked version |
 | `dependencies[].latestVersion` | Latest available version (or latest as of commit with `--at-commit`) |
-| `dependencies[].latestVersionDate` | Release date of the latest version |
+| `dependencies[].latestVersionReleasedAt` | Release date of the latest version |
 
 ## License
 

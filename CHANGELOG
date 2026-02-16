@@ -1,6 +1,7 @@
 v0.3.0 (2026-02-16)
 
 * Always output the commit timestamp as UTC, regardless of the timezone in the raw commit
+* Adjust some field names in the output to make it obvious they're timestamps, not dates
 
 v0.2.0 (2026-02-15)
 

@@ -77,30 +77,30 @@ export async function getPackageInfo(
       name,
       direct,
       currentVersion,
-      currentVersionDate: '',
+      currentVersionReleasedAt: '',
       latestVersion: '',
-      latestVersionDate: '',
+      latestVersionReleasedAt: '',
     }
   }
 
   let latestVersion: string
-  let latestVersionDate: string
+  let latestVersionReleasedAt: string
 
   if (cutoff) {
     const found = findLatestBefore(data.time, data.versions, cutoff)
     latestVersion = found?.version ?? data['dist-tags'].latest
-    latestVersionDate = found?.date ?? data.time[latestVersion] ?? 'unknown'
+    latestVersionReleasedAt = found?.date ?? data.time[latestVersion] ?? 'unknown'
   } else {
     latestVersion = data['dist-tags'].latest
-    latestVersionDate = data.time[latestVersion] ?? 'unknown'
+    latestVersionReleasedAt = data.time[latestVersion] ?? 'unknown'
   }
 
   return {
     name,
     direct,
     currentVersion,
-    currentVersionDate: data.time[currentVersion] ?? 'unknown',
+    currentVersionReleasedAt: data.time[currentVersion] ?? 'unknown',
     latestVersion,
-    latestVersionDate,
+    latestVersionReleasedAt,
   }
 }

@@ -7,9 +7,9 @@ export interface DependencyInfo {
   name: string
   direct: boolean
   currentVersion: string
-  currentVersionDate: string
+  currentVersionReleasedAt: string
   latestVersion: string
-  latestVersionDate: string
+  latestVersionReleasedAt: string
 }
 
 export interface CollectionResult {
