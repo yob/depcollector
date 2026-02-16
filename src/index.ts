@@ -88,7 +88,7 @@ function getAllLockedVersions(
 
 async function processInBatches(
   locked: LockedDependency[],
-  directNames: Set<string>,
+  directDeps: Set<string>,
   concurrency: number,
   cutoff?: Date
 ): Promise<DependencyInfo[]> {
@@ -98,7 +98,7 @@ async function processInBatches(
     const batch = locked.slice(i, i + concurrency)
     const batchResults = await Promise.all(
       batch.map((dep) =>
-        getPackageInfo(dep.name, dep.version, directNames.has(dep.name), cutoff)
+        getPackageInfo(dep.name, dep.version, directDeps.has(`${dep.name}@${dep.version}`), cutoff)
       )
     )
     results.push(...batchResults)
@@ -144,19 +144,23 @@ async function main(): Promise<void> {
     (a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version)
   )
 
-  const directNames = new Set(
-    Object.keys({
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-    })
-  )
+  const directDeps = new Set<string>()
+  for (const name of Object.keys({
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  })) {
+    const entry = lockfile.packages?.[`node_modules/${name}`]
+    if (entry?.version) {
+      directDeps.add(`${name}@${entry.version}`)
+    }
+  }
 
   const gitInfo = getGitInfo()
   const cutoff = opts.atCommit ? new Date(gitInfo.timestamp) : undefined
 
   const dependencies = await processInBatches(
     locked,
-    directNames,
+    directDeps,
     CONCURRENCY,
     cutoff
   )
