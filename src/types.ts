@@ -13,6 +13,7 @@ export interface DependencyInfo {
 }
 
 export interface CollectionResult {
+  id: string
   ecosystem: 'npm'
   projectName?: string
   manifestPath: string

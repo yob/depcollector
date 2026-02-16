@@ -1,3 +1,7 @@
+v0.4.0 (XXX)
+
+* add an `id` field to the output, populated with a UUIDv7
+
 v0.3.0 (2026-02-16)
 
 * Always output the commit timestamp as UTC, regardless of the timezone in the raw commit

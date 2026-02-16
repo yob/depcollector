@@ -7,6 +7,7 @@ import type {
   LockedDependency,
 } from './types.js'
 import { getPackageInfo } from './registry.js'
+import { v7 as uuidv7 } from 'uuid'
 import { getGitInfo } from './git.js'
 
 const CONCURRENCY = 5
@@ -161,6 +162,7 @@ async function main(): Promise<void> {
   )
 
   const result: CollectionResult = {
+    id: uuidv7(),
     ecosystem: 'npm',
     ...(opts.projectName && { projectName: opts.projectName }),
     manifestPath: relative(process.cwd(), lockfilePath),
