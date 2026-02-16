@@ -118,6 +118,7 @@ program
   )
   .option('--transitive', 'Include transitive dependencies')
   .option('--project-name <name>', 'Include a project name in the output')
+  .option('--compact', 'Output JSON as a single line with no line breaks')
   .argument('[directory]', 'Path to directory containing package-lock.json', '.')
   .parse()
 
@@ -126,6 +127,7 @@ async function main(): Promise<void> {
     atCommit?: boolean
     transitive?: boolean
     projectName?: string
+    compact?: boolean
   }>()
   const directory = program.args[0] ?? '.'
   const lockfilePath = join(directory, 'package-lock.json')
@@ -176,7 +178,7 @@ async function main(): Promise<void> {
     dependencies,
   }
 
-  console.log(JSON.stringify(result, null, 2))
+  console.log(JSON.stringify(result, null, opts.compact ? undefined : 2))
 }
 
 main().catch((err) => {

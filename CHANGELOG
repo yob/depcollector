@@ -2,6 +2,7 @@ v0.4.0 (XXX)
 
 * add an `id` field to the output, populated with a UUIDv7
 * Fix calculation of direct:true when multiple versions of a package are in the dependency tree
+* Add an optional `--compact` CLI flag that changes the output to a single line
 
 v0.3.0 (2026-02-16)
 
