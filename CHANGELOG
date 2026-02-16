@@ -1,3 +1,7 @@
+v0.5.0 (XXX)
+
+* output an explicit null value when packages aren't found in the registry
+
 v0.4.0 (2026-02-16)
 
 * add an `id` field to the output, populated with a UUIDv7
