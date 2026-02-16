@@ -1,3 +1,7 @@
+v0.3.0 (2026-02-16)
+
+* Always output the commit timestamp as UTC, regardless of the timezone in the raw commit
+
 v0.2.0 (2026-02-15)
 
 * remove the optional --manifest-path flag, replace it with an optional positional argument that points to a target directory
