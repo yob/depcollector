@@ -47,6 +47,7 @@ This prints a JSON report to stdout:
 
 ```json
 {
+  "id": "019505e2-...",
   "ecosystem": "npm",
   "collectedAt": "2026-02-08T11:24:42.590Z",
   "manifestPath": "package-lock.json",
@@ -107,6 +108,16 @@ depcollector --project-name myapp
 
 This adds a `"projectName"` key to the top level of the JSON output.
 
+### `--compact`
+
+Output the JSON as a single line with no line breaks or indentation:
+
+```bash
+depcollector --compact
+```
+
+By default, the output is pretty-printed with 2-space indentation.
+
 ### Saving output
 
 The output is plain JSON on stdout, so you can pipe it wherever you like:
@@ -126,6 +137,7 @@ depcollector | jq .
 
 | Field | Description |
 |---|---|
+| `id` | A unique UUIDv7 identifier for this report |
 | `ecosystem` | Always `"npm"` |
 | `projectName` | Project name (present when `--project-name` is used) |
 | `manifestPath` | In-repo manifest path |
