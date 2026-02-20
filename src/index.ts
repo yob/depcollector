@@ -1,5 +1,6 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, mkdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
+import { tmpdir } from 'node:os'
 import { program } from 'commander'
 import type {
   CollectionResult,
@@ -90,7 +91,8 @@ async function processInBatches(
   locked: LockedDependency[],
   directDeps: Set<string>,
   concurrency: number,
-  cutoff?: Date
+  cutoff?: Date,
+  cacheDir?: string
 ): Promise<DependencyInfo[]> {
   const results: DependencyInfo[] = []
 
@@ -98,7 +100,7 @@ async function processInBatches(
     const batch = locked.slice(i, i + concurrency)
     const batchResults = await Promise.all(
       batch.map((dep) =>
-        getPackageInfo(dep.name, dep.version, directDeps.has(`${dep.name}@${dep.version}`), cutoff)
+        getPackageInfo(dep.name, dep.version, directDeps.has(`${dep.name}@${dep.version}`), cutoff, cacheDir)
       )
     )
     results.push(...batchResults)
@@ -119,6 +121,7 @@ program
   .option('--transitive', 'Include transitive dependencies')
   .option('--project-name <name>', 'Include a project name in the output')
   .option('--compact', 'Output JSON as a single line with no line breaks')
+  .option('--cache <directory>', 'Cache registry responses in this directory (default: $TMPDIR/depcollector-cache)')
   .argument('[directory]', 'Path to directory containing package-lock.json', '.')
   .parse()
 
@@ -128,6 +131,7 @@ async function main(): Promise<void> {
     transitive?: boolean
     projectName?: string
     compact?: boolean
+    cache?: string
   }>()
   const directory = program.args[0] ?? '.'
   const lockfilePath = join(directory, 'package-lock.json')
@@ -157,6 +161,9 @@ async function main(): Promise<void> {
     }
   }
 
+  const cacheDir = opts.cache ?? join(tmpdir(), 'depcollector-cache')
+  await mkdir(cacheDir, { recursive: true })
+
   const gitInfo = getGitInfo()
   const cutoff = opts.atCommit ? new Date(gitInfo.timestamp) : undefined
 
@@ -164,7 +171,8 @@ async function main(): Promise<void> {
     locked,
     directDeps,
     CONCURRENCY,
-    cutoff
+    cutoff,
+    cacheDir
   )
 
   const result: CollectionResult = {

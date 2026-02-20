@@ -1,6 +1,8 @@
 v0.5.0 (XXX)
 
 * output an explicit null value when packages aren't found in the registry
+* cache registry responses on disk for an hour to speed up subsequent runs
+* add an optional --cache flag to control the cache location
 
 v0.4.0 (2026-02-16)
 

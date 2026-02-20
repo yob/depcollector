@@ -108,6 +108,17 @@ depcollector --project-name myapp
 
 This adds a `"projectName"` key to the top level of the JSON output.
 
+### `--cache <directory>`
+
+Registry responses are cached to disk to speed up subsequent runs. By default,
+the cache directory is `$TMPDIR/depcollector-cache`. Cached responses are used
+for up to one hour before being re-fetched. Use `--cache` to override the
+default location:
+
+```bash
+depcollector --cache ~/.cache/depcollector
+```
+
 ### `--compact`
 
 Output the JSON as a single line with no line breaks or indentation:

@@ -1,3 +1,5 @@
+import { readFile, writeFile, stat } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { DependencyInfo } from './types.js'
 
 interface NpmRegistryResponse {
@@ -38,11 +40,44 @@ function findLatestBefore(
   return { version: best, date: time[best] }
 }
 
-const registryCache = new Map<string, NpmRegistryResponse>()
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
-async function fetchRegistryData(name: string): Promise<NpmRegistryResponse> {
-  const cached = registryCache.get(name)
-  if (cached) return cached
+function cacheFilePath(cacheDir: string, name: string): string {
+  return join(cacheDir, name.replace('/', '__') + '.json')
+}
+
+async function readCacheFile(
+  cacheDir: string,
+  name: string
+): Promise<NpmRegistryResponse | undefined> {
+  const filePath = cacheFilePath(cacheDir, name)
+  try {
+    const info = await stat(filePath)
+    if (Date.now() - info.mtimeMs >= CACHE_TTL_MS) return undefined
+    const content = await readFile(filePath, 'utf-8')
+    return JSON.parse(content) as NpmRegistryResponse
+  } catch {
+    return undefined
+  }
+}
+
+async function writeCacheFile(
+  cacheDir: string,
+  name: string,
+  data: NpmRegistryResponse
+): Promise<void> {
+  const filePath = cacheFilePath(cacheDir, name)
+  await writeFile(filePath, JSON.stringify(data)).catch(() => {})
+}
+
+async function fetchRegistryData(
+  name: string,
+  cacheDir?: string
+): Promise<NpmRegistryResponse> {
+  if (cacheDir) {
+    const cached = await readCacheFile(cacheDir, name)
+    if (cached) return cached
+  }
 
   const url = `https://registry.npmjs.org/${encodeURIComponent(name)}`
   const res = await fetch(url, {
@@ -56,7 +91,11 @@ async function fetchRegistryData(name: string): Promise<NpmRegistryResponse> {
   }
 
   const data = (await res.json()) as NpmRegistryResponse
-  registryCache.set(name, data)
+
+  if (cacheDir) {
+    await writeCacheFile(cacheDir, name, data)
+  }
+
   return data
 }
 
@@ -64,11 +103,12 @@ export async function getPackageInfo(
   name: string,
   currentVersion: string,
   direct: boolean,
-  cutoff?: Date
+  cutoff?: Date,
+  cacheDir?: string
 ): Promise<DependencyInfo> {
   let data: NpmRegistryResponse
   try {
-    data = await fetchRegistryData(name)
+    data = await fetchRegistryData(name, cacheDir)
   } catch (err) {
     console.error(
       `Warning: ${err instanceof Error ? err.message : String(err)}`
