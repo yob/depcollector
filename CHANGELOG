@@ -1,4 +1,4 @@
-v0.5.0 (XXX)
+v0.5.0 2026-02-20
 
 * output an explicit null value when packages aren't found in the registry
 * cache registry responses on disk for an hour to speed up subsequent runs
